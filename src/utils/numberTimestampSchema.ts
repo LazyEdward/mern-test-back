@@ -5,31 +5,47 @@
 
 import mongoose, { SchemaDefinition, SchemaDefinitionType } from "mongoose";
 
-export type TtimestampDocument = {
+export type TCreatedTimestampDocument = {
 	createdDateTime: number,
-	lastModified: number,
 	createdAt: Date,
-  updatedAt: Date,
 }
 
-const getNumberTimestampSchema = <T extends mongoose.Document>(model: SchemaDefinition<SchemaDefinitionType<T>, T>) => ( 
+export type TTimestampDocument = {
+	lastModified: number,
+  updatedAt: Date,
+} & TCreatedTimestampDocument
+
+export const getNumberCreatedTimestampSchema = <T extends mongoose.Document>(model: SchemaDefinition<SchemaDefinitionType<T>, T>) => (
 	new mongoose.Schema<T>(
 		{
-			createdDateTime: { type: Number, default: Date.now() },
-			lastModified: { type: Number, default: Date.now() },
+			createdDateTime: { type: Number },
 			...model,
 		}, {
-			timestamps: true
+			timestamps: {
+				currentTime: ()=> Date.now(),
+				createdAt: "createdDateTime"
+			}
 		}
 	)
 )
 
-export const setTimestamp = (schema: TtimestampDocument & mongoose.Document) => {
-	if(schema.isModified("createdAt"))
-		schema.createdDateTime = schema.createdAt.valueOf()
+export const getNumberTimestampSchema = <T extends mongoose.Document>(model: SchemaDefinition<SchemaDefinitionType<T>, T>) => ( 
+	new mongoose.Schema<T>(
+		{
+			createdDateTime: { type: Number },
+			lastModified: { type: Number },
+			...model,
+		}, {
+			timestamps: {
+				currentTime: ()=> Date.now(),
+				createdAt: "createdDateTime",
+				updatedAt: "lastModified"
+			}
+		}
+	)
+)
 
+export const updateTimestamp = (schema: TTimestampDocument & mongoose.Document) => {
 	if(schema.isModified("updatedAt"))
 		schema.lastModified = schema.updatedAt.valueOf()
 }
-
-export default getNumberTimestampSchema

@@ -3,17 +3,19 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { Request, Response, NextFunction } from "express";
-import withErrorControl from "../utils/withErrorControl"
-import { registerSchema } from "../schemas/auth";
 import { OK } from "../constants/httpStatus";
+import { registerSchema } from "../schemas/auth";
 import { createAccount } from "../services/auth";
+import { setAuthCookie } from "../utils/cookies";
+import defaultHandler from "../utils/defaultHandler";
 
-export const registerHandler = withErrorControl(async (req, res) => {
+export const registerHandler = defaultHandler(async (req, res) => {
 	const validRequest = registerSchema.parse({...req.body})
 
-	const user = await createAccount(validRequest);
+	const {user, accessToken, refreshToken} = await createAccount(validRequest);
 
-	res.status(OK).json(user)
+	setAuthCookie(res, accessToken, refreshToken);
+	res.status(OK).json(user);
+	
 	return
 })

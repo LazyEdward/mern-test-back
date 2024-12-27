@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import mongoose from "mongoose";
-import getNumberTimestampSchema, { setTimestamp, TtimestampDocument } from "../utils/numberTimestampSchema";
+import { updateTimestamp, TTimestampDocument, getNumberTimestampSchema } from "../utils/numberTimestampSchema";
 import { checkEncryption, encrypt } from "../utils/encrypt";
 
 export type TUserDocument = {
@@ -12,7 +12,7 @@ export type TUserDocument = {
 	password: string,
 	verified: boolean,
 	comparePassword: (password: string) => Promise<boolean>
-} & TtimestampDocument & mongoose.Document
+} & TTimestampDocument & mongoose.Document
 
 const userSchema = getNumberTimestampSchema<TUserDocument>({
 	email: { type: String, unique: true, required: true},
@@ -22,7 +22,7 @@ const userSchema = getNumberTimestampSchema<TUserDocument>({
 
 userSchema.pre("save", async function (next) {
 	const user = this;
-	setTimestamp(user)
+	updateTimestamp(user)
 
   if(!user.isModified("password")) {
     return next();
