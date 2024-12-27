@@ -10,6 +10,10 @@ import VerificationType from "../constants/verificationType"
 import SessionModel from "../models/session"
 import UserModel from "../models/user"
 import VerificationModel from "../models/verification"
+import AppError from "../utils/AppError";
+import { CONFLICT, UNAUTHORIZED } from "../constants/httpStatus";
+import { get } from "mongoose";
+import { getUserSessionToken } from "../utils/userSessionToken";
 
 export type TAccountParam = {
 	email: string,
@@ -20,7 +24,7 @@ export const createAccount = async(data: TAccountParam) => {
 	const getUserFromEmail = await UserModel.exists({ email: data.email })
 
 	if(!!getUserFromEmail)
-		throw new Error("Account already exists")
+		throw new AppError("Account already exists", CONFLICT)
 
 	const newUser = await UserModel.create(data)
 
@@ -35,8 +39,33 @@ export const createAccount = async(data: TAccountParam) => {
 		expireDateTime: Date.now() + 1000 * 60 * 60 * 24
 	})
 
-	const refreshToken = jwt.sign({ sessionId: session._id }, JWT_REfRESH_SECRET, { expiresIn: "30d" })
-	const accessToken = jwt.sign({ userId: newUser._id, sessionId: session._id }, JWT_SECRET, { expiresIn: "5m" })
+	const userSessionToken = getUserSessionToken(session._id as string, newUser._id as string);
 
-	return {user: newUser, accessToken, refreshToken}
+	return {user: {...newUser.toObject(), password: "****"}, ...userSessionToken}
+}
+
+export const login = async(data: TAccountParam) => {
+	const user = await UserModel.findOne({ email: data.email })
+
+	if(!user)
+		throw new AppError("Invalid email or password", UNAUTHORIZED)
+
+	const isValidPassword = await user.comparePassword(data.password)
+
+	if(!isValidPassword)
+		throw new AppError("Invalid email or password", UNAUTHORIZED)
+
+	const session = await SessionModel.create({
+		userId: user._id,
+		expireDateTime: Date.now() + 1000 * 60 * 60 * 24
+	})
+
+	const userSessionToken = getUserSessionToken(session._id as string, user._id as string);
+
+	return {user: {...user.toObject(), password: "****"}, ...userSessionToken}
+}
+
+export const cleanSession = async(sessionId: string) => {
+	console.log("sessionId", sessionId)
+	await SessionModel.findOneAndDelete({ _id: sessionId })
 }
