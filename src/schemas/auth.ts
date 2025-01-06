@@ -20,4 +20,20 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
 	email: emailSchema,
 	password: passwordSchema,
+	longLived: z.boolean().optional(),
+})
+
+export const verifyUserSchema = z.object({
+	code: z.string().length(24)
+})
+
+export const forgotPasswordSchema = z.object({
+	email: emailSchema,
+})
+
+export const resetPasswordSchema = registerSchema;
+
+export const resetPasswordWithCodeSchema = z.object({
+	code: z.string().length(24),
+	...registerSchema.sourceType()._def.shape()
 })

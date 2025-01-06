@@ -7,6 +7,7 @@ import { ErrorRequestHandler, Response } from "express"
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "../constants/httpStatus"
 import { ZodError } from "zod";
 import AppError from "../utils/AppError";
+import { clearAuthCookie } from "../utils/cookies";
 
 const handleInputError = (res: Response, err: ZodError) => {
 	const errors = err.issues.map((err) => ({
@@ -33,6 +34,10 @@ const handleApplicationError = (res: Response, err: AppError) => {
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 	console.log(`ERROR ACCESSING PATH: ${req.path}`, `message: ${err.message}`)
+
+	// clear cookies
+	if (req.path === "/auth/refresh" || req.path === "/auth/logout")
+		clearAuthCookie(res)
 
 	// input errors
 	if (err instanceof ZodError) {

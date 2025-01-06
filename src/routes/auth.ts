@@ -4,12 +4,19 @@
 // https://opensource.org/licenses/MIT
 
 import { Router } from "express";
-import { loginHandler, logoutHandler, registerHandler } from "../controllers/auth";
+import { forgotPasswordHandler, loginHandler, logoutHandler, refreshSessionHandler, registerHandler, resetPasswordHandler, verifyUserHandler } from "../controllers/auth";
+import authReqLimiter from "../utils/rateLimiter";
 
 const authRoute = Router();
+
+authRoute.use(authReqLimiter)
 
 authRoute.post('/register', registerHandler);
 authRoute.post('/login', loginHandler);
 authRoute.post('/logout', logoutHandler);
+authRoute.post('/refresh', refreshSessionHandler);
+authRoute.post('/verify', verifyUserHandler);
+authRoute.post('/password/forgot', forgotPasswordHandler);
+authRoute.post('/password/reset', resetPasswordHandler);
 
 export default authRoute;

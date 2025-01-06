@@ -14,7 +14,9 @@ import connectToDatabase from "./config/db";
 
 
 import errorHandler from "./middleware/errorHandler";
+import authenticationHandler from "./middleware/authenticate";
 import authRoute from "./routes/auth";
+import protectedRoute from "./routes/protectedRoute";
 
 const app = express();
 
@@ -30,19 +32,22 @@ app.use(cookieParser());
 
 // checking
 app.get("/", (_, res) => {
-  res.status(OK).json({
-    status: "healthy",
-  });
+	res.status(OK).json({
+		status: "healthy",
+	});
 	return
 });
 
 // routes
 app.use('/auth', authRoute)
 
+// protected routes
+app.use('/protected', authenticationHandler, protectedRoute)
+
 // error handling
 app.use(errorHandler)
 
 app.listen(PORT, async () => {
-  console.log(`Server listening on port ${PORT}`);
+	console.log(`Server listening on port ${PORT}`);
 	await connectToDatabase()
 });
