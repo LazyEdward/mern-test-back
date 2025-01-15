@@ -1,0 +1,50 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    env:
+      PORT: ${{ secrets.PORT }}
+      MONGO_URI: mongodb://localhost:27017/test
+      APP_ORIGIN: ${{ secrets.APP_ORIGIN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+      EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+      EMAIL_AUTH_USER: ${{ secrets.EMAIL_AUTH_USER }}
+      EMAIL_AUTH_PASS: ${{ secrets.EMAIL_AUTH_PASS }}
+      EMAIL_SENDER_NAME: ${{ secrets.EMAIL_SENDER_NAME }}
+      EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application and wait for server to be ready
+        run: npm start & npx wait-on http://localhost:${{ secrets.PORT }}
+
+      - name: Run Cypress tests
+        run: npm run cy:run
