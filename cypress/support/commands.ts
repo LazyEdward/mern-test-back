@@ -11,7 +11,12 @@
 //
 //
 // -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
+Cypress.Commands.add('login', (email, password) => {
+	cy.request('POST', '/auth/login', {
+		email,
+		password,
+	})
+})
 //
 //
 // -- This is a child command --

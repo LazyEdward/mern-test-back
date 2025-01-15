@@ -52,6 +52,8 @@ export const logoutHandler = defaultHandler(async (req, res) => {
 export const refreshSessionHandler = defaultHandler(async (req, res) => {
 	const refreshToken = req.cookies.refreshToken;
 
+	console.log("REFRESH TOKEN", refreshToken)
+
 	if (!refreshToken)
 		throw new AppError("Missing refresh token", UNAUTHORIZED)
 
