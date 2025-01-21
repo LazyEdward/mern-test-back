@@ -3,12 +3,20 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import cypress = require("cypress");
-
 describe('Test auth routes', () => {
 
 	const chars = 'abcdefghijklmnopqrstuvwxyz'
 	let randomEmail = chars[Math.floor(Math.random() * chars.length)] + '.' + Math.random().toString(36).substring(2, 6) + '@test.com'
+
+	before(() => {
+		cy.task('dbReset')
+	})
+
+	after(() => {
+		cy.clearCookie('accessToken')
+		cy.clearCookie('refreshToken')
+		cy.task('dbReset')
+	})
 
 	it('test register route', () => {
 		cy.request('POST', '/auth/register', {
