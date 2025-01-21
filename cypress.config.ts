@@ -15,17 +15,11 @@ export default defineConfig({
         async dbReset() {
           try {
             await mongoose.connect(MONGO_URI);
-            const collections = await mongoose.connection.db?.collections() ?? [];
-
-            for (let collection of collections) {
-              collection.drop()
-            }
-
+            await mongoose.connection.db?.dropDatabase();
             await mongoose.disconnect()
             return null
           } catch (error) {
-            console.log(error)
-            throw new Error('Unable to reset the database')
+            throw new Error(`Unable to reset the database: ${error}`)
           }
         },
         async createDummyUser({ email, password }) {
@@ -35,7 +29,7 @@ export default defineConfig({
             await mongoose.disconnect()
             return null
           } catch (error) {
-            throw new Error('Failed to create dummy user')
+            throw new Error(`Failed to create dummy user: ${error}`)
           }
         }
       })
