@@ -9,15 +9,19 @@ describe('Test user routes', () => {
 	let randomEmail = chars[Math.floor(Math.random() * chars.length)] + '.' + Math.random().toString(36).substring(2, 6) + '@test.com'
 
 	before(() => {
-		cy.task('dbReset')
-		cy.task('createDummyUser', { email: randomEmail, password: 'password123' })
-		cy.login(randomEmail, 'password123')
+		cy.task('dbReset').then(() => {
+			cy.task('createDummyUser', { email: randomEmail, password: 'password123' }).then(() => {
+				cy.login(randomEmail, 'password123')
+			})
+		})
 	})
 
 	after(() => {
-		cy.clearCookie('accessToken')
-		cy.clearCookie('refreshToken')
-		cy.task('dbReset')
+		cy.clearCookie('accessToken').then(() => {
+			cy.clearCookie('refreshToken').then(() => {
+				cy.task('dbReset')
+			})
+		})
 	})
 
 	it('test get user Info', () => {

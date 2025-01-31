@@ -10,7 +10,7 @@ type TSessionTokenDecoded = {
 	userId?: any
 	sessionId?: any,
 	message?: string,
-	status: "success" | "error",
+	status: "success" | "error" | "expired",
 }
 
 export const getUserAccessToken = (userId: string, sessionId: string) => {
@@ -33,11 +33,10 @@ const verifySessionToken = (token: string, secret: typeof JWT_SECRET | typeof JW
 		return { ...decoded, status: "success" }
 	}
 	catch (err: any) {
-		let message = "Invalid token"
 		if (err instanceof TokenExpiredError)
-			message = "Token expired"
+			return { status: "expired", message: "Token expired" }
 
-		return { status: "error", message }
+		return { status: "error", message: "Invalid token" }
 	}
 }
 

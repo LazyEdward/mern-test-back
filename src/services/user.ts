@@ -5,7 +5,7 @@
 
 import { UNAUTHORIZED } from "../constants/httpStatus";
 import SessionModel from "../models/session";
-import UserModel from "../models/user"
+import UserModel, { TUserDocument } from "../models/user"
 import AppError from "../utils/AppError";
 
 export const getUserInfo = async (userId: string) => {
@@ -14,7 +14,10 @@ export const getUserInfo = async (userId: string) => {
 	if (!user)
 		throw new AppError("User not exist", UNAUTHORIZED)
 
-	return { ...user.toObject(), password: "****" }
+	const userObject = { ...user.toObject() } as Partial<TUserDocument>
+	delete userObject.password
+
+	return userObject
 }
 
 export const getActiveSessionCounts = async (userId: string) => {

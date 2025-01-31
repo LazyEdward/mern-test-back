@@ -6,7 +6,7 @@
 import { CONFLICT, TOO_MANY_REQUESTS, UNAUTHORIZED } from "../constants/httpStatus";
 import VerificationType from "../constants/verificationType";
 import SessionModel from "../models/session";
-import UserModel from "../models/user";
+import UserModel, { TUserDocument } from "../models/user";
 import VerificationModel from "../models/verification";
 import AppError from "../utils/AppError";
 import { sendResetPasswordEmail, sendVerificationEmail } from "../utils/email";
@@ -48,7 +48,10 @@ export const createAccount = async (data: TAccountParam) => {
 
 	const userSessionToken = getUserSessionToken(session._id as string, newUser._id as string);
 
-	return { user: { ...newUser.toObject(), password: "****" }, ...userSessionToken, verificationCode }
+	const userObject = { ...newUser.toObject() } as Partial<TUserDocument>
+	delete userObject.password
+
+	return { user: userObject as Omit<TUserDocument, 'password'>, ...userSessionToken, verificationCode }
 }
 
 // with reset password code
@@ -87,7 +90,10 @@ export const updateUserPassword = async (data: TAccountParam) => {
 
 	await SessionModel.deleteMany({ userId: user._id })
 
-	return { user: { ...user.toObject(), password: "****" } }
+	const userObject = { ...user.toObject() } as Partial<TUserDocument>
+	delete userObject.password
+
+	return { user: userObject as Omit<TUserDocument, 'password'> }
 }
 
 export const login = async (data: TLoginParam) => {
@@ -110,7 +116,10 @@ export const login = async (data: TLoginParam) => {
 
 	const userSessionToken = getUserSessionToken(session._id as string, user._id as string, data.longLived);
 
-	return { user: { ...user.toObject(), password: "****" }, ...userSessionToken }
+	const userObject = { ...user.toObject() } as Partial<TUserDocument>
+	delete userObject.password
+
+	return { user: userObject as Omit<TUserDocument, 'password'>, ...userSessionToken }
 }
 
 export const cleanSession = async (sessionId: string) => {
@@ -153,7 +162,10 @@ export const verifyUser = async (code: string) => {
 
 	await verificationDetails.deleteOne()
 
-	return { ...user.toObject(), password: "****" }
+	const userObject = { ...user.toObject() } as Partial<TUserDocument>
+	delete userObject.password
+
+	return userObject as Omit<TUserDocument, 'password'>
 }
 
 export const getForgotPasswordEmailSetting = async (email: string) => {

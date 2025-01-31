@@ -13,9 +13,11 @@ describe('Test auth routes', () => {
 	})
 
 	after(() => {
-		cy.clearCookie('accessToken')
-		cy.clearCookie('refreshToken')
-		cy.task('dbReset')
+		cy.clearCookie('accessToken').then(() => {
+			cy.clearCookie('refreshToken').then(() => {
+				cy.task('dbReset')
+			})
+		})
 	})
 
 	it('test register route', () => {

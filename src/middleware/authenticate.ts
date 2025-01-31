@@ -5,10 +5,38 @@
 
 import { RequestHandler } from "express";
 import AppError from "../utils/AppError";
-import { UNAUTHORIZED } from "../constants/httpStatus";
+import { FORBIDDEN, UNAUTHORIZED } from "../constants/httpStatus";
 import { verifyAccessToken } from "../utils/userSessionToken";
 
-const authenticationHandler: RequestHandler = (req, res, next) => {
+export const optionalAuthenticationHandler: RequestHandler = (req, res, next) => {
+	const accessToken = req.cookies.accessToken;
+
+	req.body.auth = {}
+
+	if (!accessToken) {
+		next()
+		return
+	}
+
+	const payload = verifyAccessToken(accessToken);
+
+	if (!payload || payload.status === "error") {
+		next()
+		return
+	}
+
+	if (payload.status === "expired") {
+		next()
+		return
+	}
+
+	req.body.auth.sessionId = payload.sessionId
+	req.body.auth.userId = payload.userId
+
+	next()
+};
+
+export const authenticationHandler: RequestHandler = (req, res, next) => {
 	const accessToken = req.cookies.accessToken;
 
 	if (!accessToken)
@@ -19,15 +47,12 @@ const authenticationHandler: RequestHandler = (req, res, next) => {
 	if (!payload || payload.status === "error")
 		throw new AppError("Not authorized", UNAUTHORIZED)
 
-	// console.log("AUTHENTICATION PAYLOAD", payload)
+	if (payload.status === "expired")
+		throw new AppError("Session Expired", FORBIDDEN)
 
 	req.body.auth = {}
 	req.body.auth.sessionId = payload.sessionId
 	req.body.auth.userId = payload.userId
 
-	// console.log("AUTHENTICATION REQ BODY", req.body)
-
 	next()
 };
-
-export default authenticationHandler
