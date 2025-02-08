@@ -10,6 +10,9 @@ describe('Test thread and post CUD routes', () => {
 	const topic = "vtuber"
 	const title = "New Post"
 
+	const topic2 = "anime"
+	const title2 = "New Post"
+
 	const content = "Test message"
 	let fromThread = ""
 
@@ -42,6 +45,23 @@ describe('Test thread and post CUD routes', () => {
 			expect(response.body).to.have.property('title', "New Post");
 
 			fromThread = response.body._id
+		})
+	})
+
+	it('test thread and post create', () => {
+		cy.request('POST', '/protected/thread/create', {
+			topic: topic2, title: title2, post: { content: "Test With post" }
+		}).then((response) => {
+			expect(response.status).to.eq(200);
+			expect(response.body).to.have.property('_id');
+			expect(response.body).to.have.property('lastModified');
+			expect(response.body).to.have.property('topic', 'anime');
+			expect(response.body).to.have.property('title', "New Post");
+
+			cy.task('getPostsByThreadId', { id: response.body._id }).then((posts: any) => {
+				expect(posts).to.have.lengthOf(1);
+				expect(posts[0]).to.have.property('content', "Test With post");
+			})
 		})
 	})
 

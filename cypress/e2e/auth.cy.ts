@@ -44,7 +44,6 @@ describe('Test auth routes', () => {
 
 	it('test refresh route', () => {
 		let refreshToken = cy.getCookie('refreshToken') ?? '';
-		console.log(refreshToken);
 
 		cy.request('POST', '/auth/refresh').then((response) => {
 			expect(response.status).to.eq(200);

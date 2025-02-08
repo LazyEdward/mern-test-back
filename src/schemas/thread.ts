@@ -29,10 +29,20 @@ export const threadCreateSchema = threadInputSchema.extend({
 	topic: z.enum(THREAD_TOPICS),
 	title: z.string().trim().min(6).max(100),
 	isPublicViewable: z.boolean().optional().default(false),
+	post: postInputSchema.extend({
+		content: z.string().min(1).max(500),
+		isHidden: z.boolean().optional().default(false),
+	}).optional()
 })
 
 export const threadUpdateSchema = threadInputSchema.extend({
 	id: z.string().length(24),
+})
+
+export const threadByTopicSchema = z.object({
+	topic: z.enum(THREAD_TOPICS),
+	subTopic: z.string().optional(),
+	currentThreadId: z.string().length(24).optional(),
 })
 
 export const threadSearchSchema = z.object({
@@ -40,6 +50,11 @@ export const threadSearchSchema = z.object({
 		id: z.string().length(24).optional(),
 	}),
 	setting: paginationSchema
+})
+
+export const postCreateDataOnlySchema = postInputSchema.extend({
+	content: z.string().min(1).max(500),
+	isHidden: z.boolean().optional().default(false),
 })
 
 export const postCreateSchema = postInputSchema.extend({

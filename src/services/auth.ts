@@ -10,6 +10,7 @@ import UserModel, { TUserDocument } from "../models/user";
 import VerificationModel from "../models/verification";
 import AppError from "../utils/AppError";
 import { sendResetPasswordEmail, sendVerificationEmail } from "../utils/email";
+import removeUndefined from "../utils/removeUndefined";
 import { getUserAccessToken, getUserRefreshToken, getUserSessionToken, verifyRefreshToken } from "../utils/userSessionToken";
 
 export type TAccountParam = {
@@ -31,7 +32,7 @@ export const createAccount = async (data: TAccountParam) => {
 	if (!!getUserFromEmail)
 		throw new AppError("Account already exists", CONFLICT)
 
-	const newUser = await UserModel.create(data)
+	const newUser = await UserModel.create(removeUndefined(data))
 
 	const verificationCode = await VerificationModel.create({
 		userId: newUser._id,
@@ -79,7 +80,7 @@ export const createAccount = async (data: TAccountParam) => {
 
 // without reset password code
 export const updateUserPassword = async (data: TAccountParam) => {
-	console.log(data)
+	// console.log(data)
 	const user = await UserModel.findOne({ email: data.email })
 
 	if (!user)
@@ -97,7 +98,7 @@ export const updateUserPassword = async (data: TAccountParam) => {
 }
 
 export const login = async (data: TLoginParam) => {
-	console.log(data)
+	// console.log(data)
 	const user = await UserModel.findOne({ email: data.email })
 
 	if (!user)

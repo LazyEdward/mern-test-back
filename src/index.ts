@@ -14,9 +14,10 @@ import connectToDatabase from "./config/db";
 
 
 import errorHandler from "./middleware/errorHandler";
-import { authenticationHandler } from "./middleware/authenticate";
+import { authenticationHandler, optionalAuthenticationHandler } from "./middleware/authenticate";
 import authRoute from "./routes/auth";
 import protectedRoute from "./routes/protectedRoute";
+import publicRoute from "./routes/public";
 
 const app = express();
 
@@ -40,6 +41,9 @@ app.get("/", (_, res) => {
 
 // routes
 app.use('/auth', authRoute)
+
+// public accessible routes
+app.use('/public', optionalAuthenticationHandler, publicRoute)
 
 // protected routes
 app.use('/protected', authenticationHandler, protectedRoute)

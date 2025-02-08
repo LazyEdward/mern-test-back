@@ -10,14 +10,18 @@ import ThreadModel, { THREAD_TOPICS } from "../models/thread";
 import AppError from "../utils/AppError";
 import { TPagination } from "../utils/pagination";
 import { searchSortConvertion } from "../utils/searchAndSort";
+import removeUndefined from "../utils/removeUndefined";
 
-export type TThreadParam = {
+export type TThreadTopicParam = {
 	topic: typeof THREAD_TOPICS[number],
 	subTopic?: string,
+}
+
+export type TThreadParam = {
 	title: string,
 	host: string,
 	isPublicViewable: boolean,
-}
+} & TThreadTopicParam
 
 export type TThreadCreateParam = TThreadParam
 
@@ -26,6 +30,11 @@ export type TThreadSearchParam = {
 	fields: Omit<Partial<TThreadParam>, 'title'> & { id?: string, title?: string | { $regex: RegExp } }
 	setting: TPagination
 }
+
+export type TThreadTopicSearchParam = {
+	publicAccess: boolean,
+	currentThreadId?: string,
+} & TThreadTopicParam
 
 export type TThreadUpdateParam = Partial<TThreadParam> & { id: string }
 
@@ -61,7 +70,19 @@ export const createThread = async (data: TThreadCreateParam) => {
 	if (!!thread)
 		throw new AppError("Title already exists", CONFLICT)
 
-	const newThread = await ThreadModel.create(data)
+	const newThread = await ThreadModel.create(removeUndefined(data))
+
+	return newThread
+}
+
+export const createThreadAndPost = async (threadData: TThreadCreateParam, postData: Omit<TPostParam, "replyTo">) => {
+	const thread = await ThreadModel.findOne({ topic: threadData.topic, title: threadData.title.trim() })
+
+	if (!!thread)
+		throw new AppError("Title already exists", CONFLICT)
+
+	const newThread = await ThreadModel.create(removeUndefined(threadData))
+	await PostModel.create(removeUndefined({ ...postData, createdUser: threadData.host, fromThread: newThread.toObject()._id }))
 
 	return newThread
 }
@@ -107,6 +128,22 @@ export const getThread = async (id: string) => {
 	return thread
 }
 
+export const getThreadByTopic = async (data: TThreadTopicSearchParam, setting: TPagination) => {
+	const { currentThreadId, publicAccess, ...rest } = data
+
+	let searchObj: Record<string, any> = removeUndefined(rest);
+
+	// look for records older than current thread
+	if (currentThreadId)
+		searchObj._id = currentThreadId
+
+	// exclude threads public access (non logged in users)
+	if (publicAccess)
+		searchObj.isPublicViewable = true
+
+	return await ThreadModel.find(searchObj).sort(searchSortConvertion(setting.sortBy)).skip(setting.page * setting.pageSize).limit(setting.pageSize)
+}
+
 export const createPost = async (data: TPostCreateParam) => {
 	if (data.replyTo) {
 		const post = await PostModel.findById(data.replyTo)
@@ -116,7 +153,7 @@ export const createPost = async (data: TPostCreateParam) => {
 
 	}
 
-	return await PostModel.create(data)
+	return await PostModel.create(removeUndefined(data))
 }
 
 export const updatePost = async (data: TPostUpdateParam) => {
@@ -164,7 +201,7 @@ export const getPost = async (id: string) => {
 	return post
 }
 
-export const getPostByThreadId = async (id: string, setting: TPagination) => {
+export const getPostsByThreadId = async (id: string, setting: TPagination) => {
 	return await PostModel.find({ fromThread: id }).sort(searchSortConvertion(setting.sortBy)).skip(setting.page * setting.pageSize).limit(setting.pageSize)
 }
 

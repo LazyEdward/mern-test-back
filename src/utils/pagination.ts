@@ -3,6 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+export const DASHBOARD_PAGE_SIZE = 3
 export const DEFAULT_PAGE_SIZE = 20
 
 export type TSortParam = {
