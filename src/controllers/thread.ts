@@ -17,7 +17,7 @@ export const dashBoardHandler = defaultHandler(async (req, res) => {
 	const lastUpdated = Date.now();
 
 	let topics: Record<string, Partial<TThreadDocument>[]> = {}
-	let topicsPromises = []
+	let topicsPromises: Promise<Partial<TThreadDocument>[]>[] = []
 
 	for (let topic of THREAD_TOPICS) {
 		topicsPromises.push(getThreadByTopic({ topic, publicAccess: !userId }, {
@@ -43,7 +43,7 @@ export const createThreadHandler = defaultHandler(async (req, res) => {
 	const { userId } = req.body.auth;
 	const { post, ...threadData } = threadCreateSchema.parse({ ...req.body, host: userId })
 
-	let thread = null;
+	let thread: {} | null = null;
 
 	if (!!post) {
 		const postData = postCreateDataOnlySchema.parse(post)

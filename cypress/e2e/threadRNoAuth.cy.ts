@@ -13,19 +13,13 @@ describe('Test thread and post Query routes', () => {
 	before(() => {
 		cy.task('dbReset').then(() => {
 			cy.task('createDummyUser', { email: randomEmail, password: 'password123' }).then((account: any) => {
-				cy.login(randomEmail, 'password123').then(() => {
-					cy.task('createDummyThreadData', { host: account.user._id })
-				})
+				cy.task('createDummyThreadData', { host: account.user._id })
 			})
 		})
 	})
 
 	after(() => {
-		cy.clearCookie('accessToken').then(() => {
-			cy.clearCookie('refreshToken').then(() => {
-				cy.task('dbReset')
-			})
-		})
+		cy.task('dbReset')
 	})
 
 	it('test dashboard', () => {
@@ -43,24 +37,15 @@ describe('Test thread and post Query routes', () => {
 			expect(response.body.topics.anime).to.have.lengthOf(2)
 			expect(response.body.topics.manga).to.have.lengthOf(0)
 			expect(response.body.topics.novel).to.have.lengthOf(0)
-			expect(response.body.topics.game).to.have.lengthOf(1)
+			expect(response.body.topics.game).to.have.lengthOf(0)
 			expect(response.body.topics.vtuber).to.have.lengthOf(2)
 
 			expect(response.body.topics.anime[0]).to.have.property('lastModified')
-			expect(response.body.topics.game[0]).to.have.property('lastModified')
 			expect(response.body.topics.vtuber[0]).to.have.property('lastModified')
 			expect(response.body.topics.anime[0]).to.have.property('host')
-			expect(response.body.topics.game[0]).to.have.property('host')
 			expect(response.body.topics.vtuber[0]).to.have.property('host')
-			expect(typeof response.body.topics.anime[0].host === 'object').to.be.true
-			expect(typeof response.body.topics.game[0].host === 'object').to.be.true
-			expect(typeof response.body.topics.vtuber[0].host === 'object').to.be.true
-			expect(response.body.topics.anime[0].host).to.have.property('_id')
-			expect(response.body.topics.game[0].host).to.have.property('_id')
-			expect(response.body.topics.vtuber[0].host).to.have.property('_id')
-			expect(response.body.topics.anime[0].host).to.have.property('email')
-			expect(response.body.topics.game[0].host).to.have.property('email')
-			expect(response.body.topics.vtuber[0].host).to.have.property('email')
+			expect(typeof response.body.topics.anime[0].host === 'string').to.be.true
+			expect(typeof response.body.topics.vtuber[0].host === 'string').to.be.true
 
 		})
 	})
@@ -72,7 +57,7 @@ describe('Test thread and post Query routes', () => {
 			expect(response.body).to.have.property('threads')
 			expect(response.body.threads).to.have.lengthOf(2)
 		})
-		cy.request('/public/threads/novel').then((response) => {
+		cy.request('/public/threads/game').then((response) => {
 			expect(response.status).to.eq(200);
 			expect(response.body).to.have.property('lastUpdated')
 			expect(response.body).to.have.property('threads')
@@ -92,14 +77,14 @@ describe('Test thread and post Query routes', () => {
 			expect(response.body).to.have.property('lastUpdated')
 			expect(response.body).to.have.property('threads')
 			expect(response.body.threads).to.have.lengthOf(1)
+
+			testThreadId = response.body.threads[0]._id
 		})
 		cy.request('/public/threads/game?subTopic=News').then((response) => {
 			expect(response.status).to.eq(200);
 			expect(response.body).to.have.property('lastUpdated')
 			expect(response.body).to.have.property('threads')
-			expect(response.body.threads).to.have.lengthOf(1)
-
-			testThreadId = response.body.threads[0]._id
+			expect(response.body.threads).to.have.lengthOf(0)
 		})
 	})
 
@@ -129,5 +114,4 @@ describe('Test thread and post Query routes', () => {
 			}
 		})
 	})
-
 })

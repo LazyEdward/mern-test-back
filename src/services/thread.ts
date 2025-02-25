@@ -119,8 +119,8 @@ export const updateThread = async (data: TThreadUpdateParam) => {
 	return thread
 }
 
-export const getThread = async (id: string) => {
-	const thread = await ThreadModel.findById(id)
+export const getThread = async (id: string, publicAccess?: boolean) => {
+	const thread = publicAccess ? await ThreadModel.findById(id) : await ThreadModel.findById(id).populate('host', '_id email')
 
 	if (!thread)
 		throw new AppError("Thread does not exists", CONFLICT)
@@ -141,7 +141,12 @@ export const getThreadByTopic = async (data: TThreadTopicSearchParam, setting: T
 	if (publicAccess)
 		searchObj.isPublicViewable = true
 
-	return await ThreadModel.find(searchObj).sort(searchSortConvertion(setting.sortBy)).skip(setting.page * setting.pageSize).limit(setting.pageSize)
+	return (
+		publicAccess ?
+			await ThreadModel.find(searchObj).sort(searchSortConvertion(setting.sortBy)).skip(setting.page * setting.pageSize).limit(setting.pageSize)
+			:
+			await ThreadModel.find(searchObj).populate('host', '_id email').sort(searchSortConvertion(setting.sortBy)).skip(setting.page * setting.pageSize).limit(setting.pageSize)
+	)
 }
 
 export const createPost = async (data: TPostCreateParam) => {
@@ -170,9 +175,9 @@ export const updatePost = async (data: TPostUpdateParam) => {
 	}
 
 	if (data.replyTo) {
-		const rePlyPost = await PostModel.findById(data.replyTo)
+		const replyPost = await PostModel.findById(data.replyTo)
 
-		if (!rePlyPost)
+		if (!replyPost)
 			throw new AppError("Reply Post does not exists", CONFLICT)
 	}
 
